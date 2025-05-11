@@ -1,0 +1,153 @@
+# Complete AI Todo + Diary Project Plan
+
+This document contains the full and final implementation plan for the AI Todo + Diary tool, combining development, AI modules, feature logic, user flows, architecture, and challenges. It acts as the single source of truth.
+
+---
+
+## 🔍 Vision
+
+Build a productivity and self-awareness app that combines task planning, journaling, and AI-guided feedback for users aged 15–50. It should:
+
+* Accept written or verbal entries.
+* Provide reminders and time estimation.
+* Reflect users’ emotions, purpose, and learnings.
+* Keep users aligned to their self-declared values.
+
+---
+
+## 🧱 System Architecture
+
+* **Frontend**: React + TailwindCSS
+* **Backend**: Django + Django REST Framework
+* **Auth**: JWT (SimpleJWT or Djoser)
+* **Database**: PostgreSQL
+* **Queue**: Celery + Redis
+* **AI**: OpenAI (GPT + Whisper), HuggingFace, sentence-transformers
+* **Infra**: AWS EC2, RDS, S3, UptimeRobot, Sentry
+
+---
+
+## 🧠 Core Modules Breakdown
+
+### 1. **Task & Todo Module**
+
+* Accepts natural language input.
+* Parses date, time, task, priority.
+* Stores in structured DB.
+* Sends reminders using Celery.
+
+### 2. **Diary Entry Module**
+
+* Accepts typed or spoken text.
+* Analyzes mood & extracts learnings.
+* Tags emotion & stores as embedding.
+
+### 3. **Perspective Memory System**
+
+* Converts every log to vector.
+* Stores with metadata in FAISS.
+* Retrieves past related memories.
+
+### 4. **Reflection & Alignment Module**
+
+* Compares current inputs with past goals.
+* Identifies contradiction or shifts.
+* Generates gentle AI feedback.
+
+### 5. **Motivational Engine**
+
+* Pulls past learnings & victories.
+* Generates motivational outputs.
+* Sends push or dashboard inserts.
+
+---
+
+## 🧪 AI Implementation Plan (Core Focus)
+
+Refer to "AI Module Implementation Guide" for:
+
+* NLU using spaCy, Transformers
+* Memory via vector stores
+* Mood detection
+* Custom time estimation models
+* Whisper-based voice transcription
+* Reflective feedback generation
+
+---
+
+## 🧑‍💻 User Experience Flow
+
+1. **User signs up** → defines their purpose.
+2. **Daily input (task/diary)** via text or voice.
+3. System parses and stores structured data.
+4. Reflection/motivation engine runs in background.
+5. User receives:
+
+   * Smart reminders
+   * Reflective feedback
+   * Dashboard insights
+
+---
+
+## 🛠️ Development Phases (Summary)
+
+### ✅ Phase 1: Core Functionality
+
+* Task logging (manual + natural input)
+* Diary logging
+* Basic scheduling/reminders
+* Simple frontend dashboard
+
+### ✅ Phase 2: AI Layer (MVP)
+
+* Mood detection
+* Learning extraction
+* Embedding-based memory
+* GPT reflections
+
+### ✅ Phase 3: Voice + Motivation
+
+* Whisper integration
+* Reflective contradiction checks
+* Past motivation injection
+
+### ✅ Phase 4: UX + Scalability
+
+* Analytics dashboard
+* API throttling, pagination, caching
+* Scaling Celery, DB indexing
+
+---
+
+## ⚠️ Technical Challenges
+
+| Area   | Challenge               | Workaround                                 |
+| ------ | ----------------------- | ------------------------------------------ |
+| AI     | GPT cost or latency     | Use batching, fallback summaries           |
+| Memory | Vector drift            | Re-embed periodically                      |
+| UX     | Voice transcription lag | Show buffering feedback                    |
+| Infra  | Reminder accuracy       | Celery monitoring + retries                |
+| Data   | Sensitive input         | End-to-end encryption + permission filters |
+
+---
+
+## 📊 KPIs
+
+* Daily active users
+* Diary completion streaks
+* Task success ratio
+* AI-generated insight usage
+* Mood improvement trend
+
+---
+
+## 🧾 Final Notes
+
+* This project can be expanded into enterprise wellness apps, coaching tools, or personalized journaling platforms.
+* Start lean, scale modules as data grows.
+
+Next step: break down each module into Python implementations, testing suites, and deployment pipelines.
+
+Prepared: 10 May 2025
+
+Maintainer: You, AI Dev + Visionary

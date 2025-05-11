@@ -1,0 +1,247 @@
+# Site Reliability Engineering (SRE) Document for AI Todo + Diary Tool
+
+## 1. Overview
+
+This document outlines the Site Reliability Engineering (SRE) strategy for the AI-based Todo + Diary application. The application is a productivity and mental wellness tool targeted at energetic and ambitious users aged 15-50. The platform uses machine learning to help users log tasks and diary entries and receive AI-guided insights and reminders.
+
+## 2. Architecture Summary
+
+**Frontend**: React + TailwindCSS
+**Backend**: Django + Django REST Framework
+**Authentication**: JWT via SimpleJWT or Djoser
+**Database**: PostgreSQL
+**Task Queue**: Celery + Redis
+**AI Integration**: OpenAI API
+**Hosting**: AWS (EC2, RDS, S3), or alternatives like Railway/Render for MVP
+**Monitoring**: Sentry, Prometheus + Grafana (optional), CloudWatch
+
+---
+
+## 3. Reliability Objectives
+
+### Service Level Objectives (SLOs):
+
+* **Uptime**: 99.9% monthly uptime
+* **Latency**:
+
+  * API responses < 300ms (95% percentile)
+  * AI endpoints < 2.5s (90% percentile)
+* **Error Rate**: < 1% of total requests
+* **Task delay**: Reminders and cron jobs should execute within 1 min of scheduled time
+
+---
+
+## 4. System Monitoring
+
+### Frontend:
+
+* Track React crash logs via **Sentry**
+* Monitor API error responses and latency via **Axios interceptors**
+
+### Backend:
+
+* Use **Django middleware** to log slow requests
+* Track Celery job queue length and retry failures
+* Monitor database query times
+* Watch for failed login attempts and permission errors
+
+### Infra:
+
+* Uptime via **UptimeRobot / Pingdom**
+* Instance health checks (CPU, memory, disk) via **CloudWatch / Grafana**
+
+---
+
+## 5. Alerting
+
+**Tools**: Sentry + Slack, Email Alerts
+
+### Alert Types:
+
+* **Frontend crash**: Alert if daily crash count > 10
+* **Backend failure**: Alert on 500 errors, DB connection failures
+* **AI error**: Alert on GPT API failure or high latency
+* **Cron delays**: Alert if scheduled reminders are >2 minutes late
+* **Abnormal spikes**: Alert if API error rate exceeds 2% within 15 min
+
+---
+
+## 6. Backup & Recovery
+
+* **Database**: Nightly full backups + hourly WAL archiving (e.g., pgBackRest or RDS snapshots)
+* **Media Files**: Daily sync to S3
+* **AI Logs & Summaries**: Backed up weekly (non-critical)
+* **Disaster Recovery Time Objective (RTO)**: < 2 hours
+* **Recovery Point Objective (RPO)**: 15 minutes
+
+---
+
+## 7. Load Handling
+
+* Enable **rate limiting** for task/diary APIs (e.g., 60 req/min per user)
+* Use **pagination** for diary/task history views
+* Use **Celery** for heavy AI inference tasks
+* Cache frequent reads (e.g., daily task summaries) using **Redis**
+
+---
+
+## 8. Security
+
+* Use HTTPS only (HSTS headers enabled)
+* Store JWT in secure HTTP-only cookies (if web)
+* Enable brute force protection on login/signup endpoints
+* Use **Django permissions + throttling** for API access
+* Sanitize user input on diary entries to prevent XSS
+
+---
+
+## 9. Deployment Strategy
+
+* Use GitHub Actions or Railway/Render auto-deploy
+* Setup **blue-green deployment** for zero downtime
+* Pre-deployment test suite required (unit + integration)
+* Database migrations done using Django management commands with lock checks
+
+---
+
+## 10. Logging & Auditing
+
+* Structured logs for all backend actions using Python logger
+* User activity logs: logins, diary/task create/update/delete
+* AI API call logs with timestamp and latency
+
+---
+
+## 11. Scalability Plan
+
+* Use **PostgreSQL read replicas** if query volume increases
+* Scale Celery workers horizontally
+* Switch to managed queue (e.g., AWS SQS) in future
+* Migrate to containerized deployment using Docker + Kubernetes if traffic exceeds MVP infra
+
+---
+
+## 12. Incident Management
+
+* Use incident runbooks (linked to Notion)
+* Triage: Severity 1-5 based on impact
+* Escalation: Developer > DevOps > AI Engineer (if applicable)
+* Postmortem after each P1/P2 incident (within 48 hours)
+
+---
+
+## 13. Maintenance & Rotation
+
+* Scheduled maintenance window: Sundays 2am-3am UTC
+* Rotate API keys, database credentials every 30 days
+* Audit user roles and DB indexes quarterly
+
+---
+
+## 14. Key Risks & Mitigations
+
+| Risk                  | Mitigation                                          |
+| --------------------- | --------------------------------------------------- |
+| AI latency or failure | Fallback summary: "Summary unavailable" + retry     |
+| Token expiry issues   | Refresh token rotation + error catching on frontend |
+| User data loss        | WAL + regular DB snapshot backups                   |
+| Celery task crashes   | Retry on failure + alert with job\_id context       |
+| GPT cost blowout      | Cap daily usage per user + audit logs               |
+
+---
+
+## 15. Tools Summary
+
+| Area       | Tools                                             |
+| ---------- | ------------------------------------------------- |
+| Monitoring | Sentry, Prometheus, UptimeRobot                   |
+| Task Queue | Celery + Redis                                    |
+| Database   | PostgreSQL (with backups)                         |
+| Alerts     | Email, Slack, Sentry Webhooks                     |
+| Deployment | GitHub Actions, Docker (optional), Railway/Render |
+| Logging    | Python logging, Cloud logs                        |
+
+---
+
+## 16. Functional Requirements (Minute Level)
+
+### User Input Processing
+
+* Accept and transcribe user voice input using Whisper or similar
+* Text input classified into diary, task, goal, emotion, memory
+* NLP tagger categorizes context (urgent, recurring, motivational)
+
+### Task Management
+
+* Add/edit/delete task entries
+* Set estimated time for completion (manual/AI suggested)
+* Track actual vs. planned time with countdown visualization
+
+### Diary System
+
+* Write journal entries (text/voice)
+* Generate automatic daily summaries
+* Store emotional tags and learnings for future reference
+
+### AI-Powered Reflection
+
+* Match new behavior with past motivation memory
+* Alert if unconscious detachment detected (e.g., slacking)
+* Send reflection questions: “Why did this happen?”, “Is this aligned?”
+
+### Motivation & Nudges
+
+* Smart reminder engine combining calendar, task urgency, and effort
+* Motivation prompts based on stored achievements
+* AI voice/text coach for pep-talks or advice
+
+### Data Retrieval
+
+* Search past logs by emotion, type, goal, or keyword
+* Auto-resurface past entries at related times (e.g., quarterly review)
+
+### Visualization & Dashboard
+
+* Show daily progress bar: Time used vs. left
+* Alignment Score: Goals completed aligned with intention
+* Emotional timeline: graph of moods & motivations over time
+
+---
+
+## 17. Non-Functional Requirements (Expanded)
+
+### Performance
+
+* <300ms response time for CRUD ops
+* <2.5s AI response (95% of cases)
+* Voice transcription latency < 5s
+
+### Security
+
+* AES-256 encryption at rest
+* Role-based access control (RBAC) with JWT refresh
+* User voice/text anonymization for logs
+
+### Scalability
+
+* Message queue for async processing
+* Horizontal scaling for Celery workers
+* Separate read/write DB if needed
+
+### Usability
+
+* UX tested on target age group (15–50)
+* Touch-first, voice-enabled UI
+* Prompt-based journaling system with examples
+
+### Maintainability
+
+* Microservices option for AI, Task, Diary modules
+* 85% test coverage minimum
+* Modular CSS and component libraries (Tailwind + atomic design)
+
+---
+
+Prepared by: **AI Diary / Todo SRE Guide**
+Maintainer: Founder/DevOps lead
+Date: 10 May 2025

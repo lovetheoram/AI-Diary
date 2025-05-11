@@ -1,0 +1,170 @@
+# AI Module Implementation Guide for AI Todo + Diary Tool
+
+## 1. Overview
+
+This document provides a deep technical and implementation-level breakdown of the AI components of the AI Todo + Diary application. As the AI is the core engine powering user guidance, reflections, and smart reminders, this document explores all options from using prebuilt APIs to building your own models.
+
+---
+
+## 2. Core AI Features
+
+### 2.1 Understanding User Input
+
+* **Input Modes**: Text and Voice
+* **Goal**: Extract intents, tasks, emotions, goals, commitments from free-form user input.
+* **Techniques**:
+
+  * **Pretrained NLP models**: Sentence transformers (e.g., `all-MiniLM-L6-v2`)
+  * **OpenAI GPT API**: Few-shot prompting or function-calling
+  * **Speech-to-text**: Use `whisper` (OpenAI) or `Google Cloud Speech-to-Text`
+
+### 2.2 Intent Classification
+
+* **Use case**: Determine if the user is adding a todo, journaling, reflecting, or asking a question.
+* **Solutions**:
+
+  * OpenAI function calling with role classification
+  * Fine-tune BERT/RoBERTa model on task types
+
+### 2.3 Task Estimation & Time Tracking
+
+* **Use case**: Estimate time required to complete task based on historical data or user patterns.
+* **Approach**:
+
+  * Manual rule-based estimation based on task keywords initially
+  * Upgrade to regression model trained on user data (time\_spent vs task\_description)
+
+### 2.4 Personal Diary Summarization
+
+* **Use case**: Weekly/monthly summary of user's emotional and work patterns.
+* **Solution**:
+
+  * OpenAI GPT with summarization prompt template
+  * Optional: fine-tune summarization models on diary datasets (e.g., CNN-DailyMail as base)
+
+### 2.5 Self-reflection & Alignment Feedback
+
+* **Use case**: Detect self-sabotaging patterns or misalignment from goals
+* **Techniques**:
+
+  * Use conversational agents powered by GPT with memory/context
+  * Create embeddings of user goals and compare cosine similarity with diary entries
+  * Add prompts like: "Does this entry align with your stated goal on 5 May 2025?"
+
+### 2.6 Contextual Reminder System
+
+* **Use case**: Remind based on priorities, deadlines, and emotional importance.
+* **Solution**:
+
+  * Task priority scoring (based on NLP and urgency estimation)
+  * Time left calculation and auto-reminder generation via Celery
+
+---
+
+## 3. Build vs API: AI Options
+
+| Feature         | OpenAI API (GPT-4)   | Self-built Model (BERT, T5)       |
+| --------------- | -------------------- | --------------------------------- |
+| Setup Time      | Minutes              | Weeks to months                   |
+| Accuracy        | High                 | Medium (depends on training data) |
+| Cost            | API usage cost       | Compute + storage                 |
+| Scalability     | Built-in with OpenAI | Needs infra (K8s, GPU)            |
+| Privacy Control | Low                  | High                              |
+| Custom Training | Limited              | Full control                      |
+
+### Recommendation:
+
+* Start with **OpenAI APIs** (Chat + Whisper + Embedding)
+* Gradually transition parts (e.g., intent classification, summarization) to **custom models** for cost-saving and performance control.
+
+---
+
+## 4. AI Stack & Tools
+
+### 4.1 Libraries & Services
+
+* **NLP**: `transformers`, `sentence-transformers`, `spaCy`
+* **Voice**: `whisper`, `pydub`, `speechrecognition`
+* **Vector DB**: `FAISS` or `Weaviate` (for semantic search)
+* **Backend**: Django + Celery + Redis
+* **API**: OpenAI (GPT-4, Whisper, Embedding API)
+
+### 4.2 Prompt Design (GPT)
+
+* Maintain prompt templates for:
+
+  * Daily todo interpretation
+  * Weekly diary reflection
+  * Misalignment detection
+  * Time estimation
+* Store prompts in editable backend DB for dynamic updates
+
+### 4.3 Memory & Context System
+
+* Store long-term user info (goals, commitments, personality traits)
+* Use `FAISS` to embed and retrieve context relevant to current message
+* Pass context along with new input to GPT
+
+---
+
+## 5. Implementation Phases (Beginner Friendly)
+
+### Phase 1: MVP Using APIs
+
+* [ ] Integrate Whisper for speech-to-text
+* [ ] Use OpenAI GPT for intent classification
+* [ ] Store tasks, diary in PostgreSQL
+* [ ] Generate summaries and reminders using GPT
+* [ ] Trigger reminders with Celery
+
+### Phase 2: Add Embedding & Memory
+
+* [ ] Store goals and major events as embeddings (FAISS)
+* [ ] Compare each new diary entry against goal vector
+* [ ] Warn on misalignment or drifting pattern
+
+### Phase 3: Transition to Custom ML Models
+
+* [ ] Train intent classifier (BERT)
+* [ ] Build lightweight summarizer (DistilBART)
+* [ ] Train emotional tone analyzer
+* [ ] Add user-specific adaptation (personal AI coach)
+
+---
+
+## 6. Challenges
+
+### Cost
+
+* OpenAI APIs can become expensive; mitigate with caching & fallback models
+
+### Privacy
+
+* Data sent to APIs may have privacy implications; add anonymization & opt-in
+
+### Accuracy
+
+* Reflections may feel generic unless context is well-preserved
+
+### Speech
+
+* Whisper may have accents/clarity limitations
+
+### Long-term Engagement
+
+* Design user journey to create habit, not just one-time input
+
+---
+
+## 7. Future Directions
+
+* On-device model inference (e.g., Whisper Tiny, DistilBERT)
+* Multilingual support
+* Mental health check-ins
+* Personalized goal alignment score
+* Visual timelines of task vs mood
+
+---
+
+Prepared by: **AI Diary Dev Guide**
+Date: 10 May 2025
